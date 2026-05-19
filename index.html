@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IoT Exam Prediction — Pro Dashboard</title>
+<script>document.documentElement.classList.add('js');</script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&display=swap');
+
+:root {
+  --bg0:#03050f;--bg1:#070d1e;--bg2:#0b1228;--bg3:#0f1a36;
+  --glass:rgba(15,26,54,0.6);--glass2:rgba(0,212,255,0.04);
+  --b1:#00d4ff;--b2:#00b8e6;--p1:#a855f7;--p2:#7c3aed;
+  --c1:#00ffea;--c2:#22c55e;--r1:#ef4444;--a1:#f59e0b;
+  --tx:#e2e8f0;--ts:#94a3b8;--tm:#475569;
+  --bdr:rgba(0,212,255,0.15);--bdr2:rgba(168,85,247,0.2);
+  --glow:0 0 20px rgba(0,212,255,0.15),0 0 40px rgba(0,212,255,0.05);
+  --glowp:0 0 20px rgba(168,85,247,0.2),0 0 40px rgba(168,85,247,0.08);
+  --glowr:0 0 20px rgba(239,68,68,0.2);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg0);color:var(--tx);font-family:'Space Grotesk',sans-serif;font-size:15px;line-height:1.65;overflow-x:hidden;}
+
+/* BACKGROUND */
+body::before{content:'';position:fixed;inset:0;background:
+  radial-gradient(ellipse 80% 50% at 10% 5%,rgba(0,100,200,0.12) 0%,transparent 60%),
+  radial-gradient(ellipse 60% 40% at 90% 95%,rgba(120,50,200,0.1) 0%,transparent 60%),
+  radial-gradient(ellipse 40% 30% at 50% 50%,rgba(0,212,255,0.03) 0%,transparent 70%);
+pointer-events:none;z-index:0;}
+
+/* GRID NOISE */
+body::after{content:'';position:fixed;inset:0;background-image:
+  linear-gradient(rgba(0,212,255,0.015) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(0,212,255,0.015) 1px,transparent 1px);
+background-size:60px 60px;pointer-events:none;z-index:0;}
+
+.wrap{max-width:1200px;margin:0 auto;padding:0 1.5rem;position:relative;z-index:1;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(3,5,15,0.85);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--bdr);padding:0 2rem;}
+.nav-inner{max-width:1200px;margin:0 auto;height:58px;display:flex;align-items:center;justify-content:space-between;}
+.nav-logo{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;
+  background:linear-gradient(135deg,var(--b1),var(--p1));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:1px;}
+.nav-links{display:flex;gap:0;list-style:none;}
+.nav-links a{color:var(--ts);font-size:12px;text-decoration:none;padding:6px 12px;border-radius:4px;
+  letter-spacing:0.5px;font-family:'JetBrains Mono',monospace;transition:all 0.2s;}
+.nav-links a:hover{color:var(--b1);background:rgba(0,212,255,0.06);}
+.nav-badge{background:linear-gradient(135deg,rgba(0,212,255,0.15),rgba(168,85,247,0.15));
+  border:1px solid var(--bdr);color:var(--b1);font-size:11px;padding:4px 12px;border-radius:20px;
+  font-family:'JetBrains Mono',monospace;letter-spacing:1px;}
+
+/* HERO */
+.hero{padding:130px 0 80px;text-align:center;position:relative;}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;
+  background:rgba(0,212,255,0.06);border:1px solid var(--bdr);
+  color:var(--b1);font-size:11px;letter-spacing:2px;padding:7px 18px;border-radius:30px;
+  font-family:'JetBrains Mono',monospace;margin-bottom:1.8rem;text-transform:uppercase;}
+.hero-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--b1);
+  box-shadow:0 0 8px var(--b1);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.hero h1{font-family:'Syne',sans-serif;font-size:clamp(2rem,5vw,3.8rem);font-weight:800;
+  line-height:1.1;letter-spacing:-1px;margin-bottom:1rem;}
+.hero h1 .grad{background:linear-gradient(135deg,#00d4ff 0%,#a855f7 50%,#00ffea 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero-sub{color:var(--ts);font-size:1rem;max-width:560px;margin:0 auto 2.5rem;}
+.hero-chips{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:3rem;}
+.chip{background:var(--glass);border:1px solid var(--bdr);border-radius:6px;
+  padding:6px 14px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--ts);}
+.chip span{color:var(--b1);}
+
+/* STAT STRIP */
+.stat-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  gap:1px;background:var(--bdr);border:1px solid var(--bdr);border-radius:12px;overflow:hidden;margin-top:2rem;}
+.stat-cell{background:var(--bg1);padding:1.4rem 1.2rem;text-align:center;}
+.stat-cell .n{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--b1);line-height:1;}
+.stat-cell .l{font-size:11px;color:var(--tm);letter-spacing:1px;text-transform:uppercase;margin-top:4px;font-family:'JetBrains Mono',monospace;}
+.stat-cell:nth-child(2) .n{color:var(--p1);}
+.stat-cell:nth-child(3) .n{color:var(--c1);}
+.stat-cell:nth-child(4) .n{color:var(--a1);}
+.stat-cell:nth-child(5) .n{color:var(--c2);}
+
+/* SECTIONS */
+section{padding:70px 0;}
+.sec-head{margin-bottom:2.5rem;}
+.sec-tag{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;
+  font-size:10px;letter-spacing:2px;color:var(--b1);text-transform:uppercase;
+  background:rgba(0,212,255,0.06);border:1px solid var(--bdr);
+  padding:5px 12px;border-radius:20px;margin-bottom:10px;}
+.sec-tag::before{content:'//';color:var(--p1);}
+.sec-title{font-family:'Syne',sans-serif;font-size:clamp(1.4rem,3vw,2rem);font-weight:800;line-height:1.2;margin-bottom:6px;}
+.sec-desc{color:var(--ts);font-size:14px;}
+hr.sec-line{border:none;border-top:1px solid var(--bdr);margin:3px 0 0;}
+
+/* CARDS */
+.glass-card{background:var(--glass);backdrop-filter:blur(20px);
+  border:1px solid var(--bdr);border-radius:12px;padding:1.4rem 1.5rem;
+  transition:all 0.3s;position:relative;overflow:hidden;}
+.glass-card:hover{border-color:rgba(0,212,255,0.35);box-shadow:var(--glow);transform:translateY(-2px);}
+.glass-card.purple{border-color:var(--bdr2);}
+.glass-card.purple:hover{border-color:rgba(168,85,247,0.5);box-shadow:var(--glowp);}
+.glass-card.red{border-color:rgba(239,68,68,0.2);}
+.glass-card.red:hover{box-shadow:var(--glowr);}
+.glass-card.amber{border-color:rgba(245,158,11,0.2);}
+.glass-card.green{border-color:rgba(34,197,94,0.2);}
+.glass-card.green:hover{border-color:rgba(34,197,94,0.45);box-shadow:0 0 20px rgba(34,197,94,0.18);}
+.glass-card::before,.unit-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.blue-top::before{background:linear-gradient(90deg,var(--b1),transparent);}
+.purple-top::before{background:linear-gradient(90deg,var(--p1),transparent);}
+.cyan-top::before{background:linear-gradient(90deg,var(--c1),transparent);}
+.red-top::before{background:linear-gradient(90deg,var(--r1),transparent);}
+.amber-top::before{background:linear-gradient(90deg,var(--a1),transparent);}
+
+/* GRID LAYOUTS */
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;}
+.g3{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.75rem;}
+
+/* TAGS / BADGES */
+.badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:9px;
+  letter-spacing:1.5px;padding:3px 9px;border-radius:3px;text-transform:uppercase;font-weight:700;}
+.b-crit{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:#ef4444;}
+.b-vh{background:rgba(168,85,247,0.15);border:1px solid rgba(168,85,247,0.4);color:#a855f7;}
+.b-hi{background:rgba(0,212,255,0.12);border:1px solid rgba(0,212,255,0.35);color:#00d4ff;}
+.b-rep{background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.35);color:#f59e0b;}
+.b-ok{background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.35);color:#22c55e;}
+
+/* PROGRESS BARS */
+.pbar-wrap{margin-bottom:1rem;}
+.pbar-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.pbar-label .topic{font-size:13px;font-weight:500;}
+.pbar-label .pct{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--b1);}
+.pbar-bg{background:rgba(255,255,255,0.05);border-radius:3px;height:6px;overflow:hidden;}
+.pbar-fill{height:100%;border-radius:3px;position:relative;transition:width 1.5s cubic-bezier(0.4,0,0.2,1);}
+.pbar-fill::after{content:'';position:absolute;top:0;right:0;bottom:0;width:20px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3));}
+.fill-blue{background:linear-gradient(90deg,#00d4ff,#00ffea);}
+.fill-purple{background:linear-gradient(90deg,#7c3aed,#a855f7);}
+.fill-amber{background:linear-gradient(90deg,#f59e0b,#fbbf24);}
+.fill-red{background:linear-gradient(90deg,#ef4444,#f97316);}
+.fill-green{background:linear-gradient(90deg,#22c55e,#10b981);}
+
+/* QUESTION CARDS */
+.q-card{background:var(--bg2);border:1px solid rgba(255,255,255,0.07);border-radius:10px;
+  padding:1.1rem 1.25rem;transition:all 0.25s;cursor:default;}
+.q-card:hover{border-color:rgba(0,212,255,0.25);background:var(--bg3);}
+.q-idx{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--tm);letter-spacing:1px;margin-bottom:5px;}
+.q-text{font-size:14px;font-weight:600;color:var(--tx);margin-bottom:8px;line-height:1.45;}
+.q-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+
+/* CONF DOTS */
+.conf{display:flex;gap:3px;align-items:center;}
+.cdot{width:7px;height:7px;border-radius:50%;}
+.c-on{background:var(--b1);box-shadow:0 0 4px var(--b1);}
+.c-on-p{background:var(--p1);}
+.c-on-a{background:var(--a1);}
+.c-off{background:rgba(255,255,255,0.1);}
+
+/* UNIT CARDS */
+.unit-card{background:var(--glass);border:1px solid var(--bdr);border-radius:12px;
+  padding:0;overflow:hidden;transition:all 0.3s;position:relative;}
+.unit-card:hover{box-shadow:var(--glow);border-color:rgba(0,212,255,0.3);}
+.unit-head{padding:1.1rem 1.3rem;border-bottom:1px solid var(--bdr);
+  display:flex;justify-content:space-between;align-items:center;}
+.unit-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--p1);
+  letter-spacing:2px;text-transform:uppercase;}
+.unit-name{font-weight:700;font-size:14px;margin-top:2px;}
+.unit-body{padding:1.1rem 1.3rem;}
+.unit-topics{list-style:none;}
+.unit-topics li{font-size:12px;color:var(--ts);padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);
+  display:flex;align-items:center;gap:7px;}
+.unit-topics li::before{content:'›';color:var(--b1);font-size:14px;}
+.unit-topics li:last-child{border-bottom:none;}
+.unit-weight{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;}
+
+/* PREDICTED HIGHLIGHT */
+.predict-hero{background:linear-gradient(135deg,rgba(168,85,247,0.08),rgba(0,212,255,0.06));
+  border:1px solid rgba(168,85,247,0.3);border-radius:16px;padding:2rem;
+  position:relative;overflow:hidden;}
+.predict-hero::before{content:'';position:absolute;top:-80px;right:-80px;width:300px;height:300px;
+  border-radius:50%;background:radial-gradient(circle,rgba(168,85,247,0.08),transparent 70%);}
+.predict-hero::after{content:'';position:absolute;bottom:-60px;left:-60px;width:200px;height:200px;
+  border-radius:50%;background:radial-gradient(circle,rgba(0,212,255,0.06),transparent 70%);}
+.predict-hero .content{position:relative;z-index:1;}
+.predict-rank{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
+  color:var(--p1);text-transform:uppercase;margin-bottom:10px;}
+.predict-q{font-size:1.1rem;font-weight:700;line-height:1.45;color:var(--tx);margin-bottom:1.2rem;
+  border-left:3px solid var(--p1);padding-left:1rem;}
+.outline-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0.6rem;margin-top:1rem;}
+.outline-item{background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.07);border-radius:8px;
+  padding:0.7rem 0.9rem;font-size:12px;}
+.outline-item .step{color:var(--p1);font-family:'JetBrains Mono',monospace;font-size:10px;margin-bottom:3px;}
+.outline-item .marks{color:var(--b1);font-size:10px;float:right;font-family:'JetBrains Mono',monospace;}
+
+/* PROTOCOL CARDS */
+.proto-card{background:var(--bg2);border:1px solid rgba(255,255,255,0.07);border-radius:10px;
+  padding:1rem 1.1rem;transition:all 0.25s;}
+.proto-card:hover{border-color:rgba(0,212,255,0.25);transform:translateY(-2px);}
+.proto-name{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;margin-bottom:4px;}
+.proto-exp{font-size:11px;color:var(--tm);font-family:'JetBrains Mono',monospace;margin-bottom:8px;}
+.proto-bar{height:3px;border-radius:2px;margin-bottom:10px;}
+.proto-facts{font-size:11px;color:var(--ts);line-height:1.8;}
+.proto-facts span{display:block;}
+.proto-facts strong{color:var(--tx);}
+
+/* DIAGRAM TABLE */
+.diag-table{width:100%;border-collapse:collapse;}
+.diag-table th{text-align:left;padding:9px 12px;border-bottom:1px solid var(--bdr);
+  font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;color:var(--b1);
+  text-transform:uppercase;font-weight:400;}
+.diag-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);
+  font-size:13px;vertical-align:middle;}
+.diag-table tr:hover td{background:rgba(255,255,255,0.02);}
+.diag-table tr:last-child td{border-bottom:none;}
+.imp-dot{display:inline-flex;gap:3px;}
+.imp-dot span{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.1);}
+.imp-dot span.on{background:var(--b1);box-shadow:0 0 5px var(--b1);}
+.imp-dot span.off{background:rgba(255,255,255,0.1);}
+
+/* REVISION ZONE */
+.rev-col{display:flex;flex-direction:column;gap:0.6rem;}
+.rev-item{background:var(--bg2);border:1px solid rgba(255,255,255,0.06);border-radius:8px;
+  padding:0.75rem 1rem;display:flex;align-items:flex-start;gap:10px;}
+.rev-icon{font-size:16px;margin-top:1px;min-width:18px;}
+.rev-item .t{font-size:13px;font-weight:600;margin-bottom:2px;}
+.rev-item .d{font-size:11px;color:var(--ts);}
+
+/* EXAMINER ANALYSIS */
+.trend-item{display:flex;gap:12px;align-items:flex-start;
+  padding:0.8rem 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+.trend-item:last-child{border-bottom:none;}
+.trend-num{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;color:var(--p1);min-width:28px;}
+.trend-content .t{font-size:13px;font-weight:600;}
+.trend-content .d{font-size:12px;color:var(--ts);}
+
+/* MUST-STUDY TABLE */
+.must-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:0.75rem;}
+.must-card{background:var(--bg2);border:1px solid rgba(255,255,255,0.07);border-radius:8px;
+  padding:0.9rem 1rem;transition:all 0.2s;display:flex;gap:10px;align-items:flex-start;}
+.must-card:hover{border-color:rgba(0,212,255,0.2);}
+.must-rank{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;line-height:1;
+  min-width:32px;color:rgba(255,255,255,0.12);}
+.must-content .t{font-size:13px;font-weight:600;margin-bottom:4px;}
+.must-content .m{display:flex;gap:5px;flex-wrap:wrap;}
+
+/* FOOTER */
+footer{background:var(--bg1);border-top:1px solid var(--bdr);padding:2rem;text-align:center;margin-top:3rem;}
+footer .logo{font-family:'Syne',sans-serif;font-size:1rem;font-weight:800;
+  background:linear-gradient(135deg,var(--b1),var(--p1));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:6px;}
+footer p{font-size:12px;color:var(--tm);font-family:'JetBrains Mono',monospace;letter-spacing:0.5px;}
+
+/* TABS */
+.tabs{display:flex;gap:3px;border-bottom:1px solid var(--bdr);margin-bottom:1.5rem;overflow-x:auto;padding-bottom:0;}
+.tab{background:none;border:none;color:var(--ts);font-family:'JetBrains Mono',monospace;
+  font-size:11px;letter-spacing:1px;padding:9px 16px;cursor:pointer;
+  border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;transition:all 0.2s;}
+.tab:hover{color:var(--b1);}
+.tab.active{color:var(--b1);border-bottom-color:var(--b1);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* SCROLL ANIMATION */
+.fade-in{opacity:1;transform:none;}
+.js .fade-in{opacity:0;transform:translateY(24px);transition:opacity 0.6s ease,transform 0.6s ease;}
+.js .fade-in.visible{opacity:1;transform:translateY(0);}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:var(--bg1);}
+::-webkit-scrollbar-thumb{background:rgba(0,212,255,0.2);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(0,212,255,0.4);}
+
+@media(max-width:768px){
+  .nav-links{display:none;}
+  nav{padding:0 1rem;}
+  .nav-inner{height:auto;min-height:58px;gap:0.75rem;}
+  .nav-logo{font-size:0.95rem;}
+  .nav-badge{font-size:10px;padding:4px 9px;}
+  .wrap{padding:0 1rem;}
+  .hero{padding:100px 0 60px;}
+  .stat-strip{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .g2,.g3,.g4{grid-template-columns:1fr;}
+  .diag-table{display:block;overflow-x:auto;white-space:nowrap;}
+  .tabs{padding-bottom:2px;}
+  .tab{padding:9px 12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">IoT · EXAM ENGINE</div>
+    <ul class="nav-links">
+      <li><a href="#units">Units</a></li>
+      <li><a href="#section-a">1-Mark</a></li>
+      <li><a href="#section-b">8-Mark</a></li>
+      <li><a href="#section-c">15-Mark</a></li>
+      <li><a href="#protocols">Protocols</a></li>
+      <li><a href="#revision">Revision</a></li>
+    </ul>
+    <div class="nav-badge">v2.0 · PRO</div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="wrap">
+    <div class="hero-eyebrow">Advanced Exam Prediction Engine · Active</div>
+    <h1><span class="grad">Internet of Things</span><br>Exam Prediction Dashboard</h1>
+    <p class="hero-sub">Deep pattern mining across all previous year papers. High-yield topic identification, question prediction, and scoring strategy — built for maximum exam efficiency.</p>
+    <div class="hero-chips">
+      <div class="chip">Section A: <span>20 × 1 Mark</span></div>
+      <div class="chip">Section B: <span>5 × 8 Marks</span></div>
+      <div class="chip">Section C: <span>1 × 15 Marks</span></div>
+      <div class="chip">Target: <span>80%+ Overlap</span></div>
+    </div>
+    <div class="stat-strip">
+      <div class="stat-cell"><div class="n">5</div><div class="l">Units Analyzed</div></div>
+      <div class="stat-cell"><div class="n">20</div><div class="l">1M Predictions</div></div>
+      <div class="stat-cell"><div class="n">10</div><div class="l">8M Predictions</div></div>
+      <div class="stat-cell"><div class="n">3</div><div class="l">15M Predictions</div></div>
+      <div class="stat-cell"><div class="n">85%</div><div class="l">Accuracy Target</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- UNIT ANALYSIS -->
+<section id="units">
+  <div class="wrap">
+    <div class="sec-head fade-in">
+      <div class="sec-tag">Unit Analysis</div>
+      <h2 class="sec-title">Unit-wise Breakdown & Weightage</h2>
+    </div>
+    <div class="g2 fade-in" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));">
+
+      <div class="unit-card blue-top">
+        <div class="unit-head">
+          <div><div class="unit-num">Unit 01</div><div class="unit-name">IoT Architecture & Fundamentals</div></div>
+          <div class="unit-weight" style="background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.3);color:var(--b1);">95%</div>
+        </div>
+        <div class="unit-body">
+          <div class="pbar-wrap" style="margin-bottom:0.75rem;">
+            <div class="pbar-bg"><div class="pbar-fill fill-blue animated-bar" data-w="92"></div></div>
+          </div>
+          <ul class="unit-topics">
+            <li>IoT definition, characteristics, evolution</li>
+            <li>3-Layer & 5-Layer architecture</li>
+            <li>IoT vs M2M comparison</li>
+            <li>Communication paradigms</li>
+            <li>Publish-subscribe model</li>
+            <li>IoT enabling technologies</li>
+          </ul>
+          <div style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap;">
+            <span class="badge b-crit">Critical</span>
+            <span class="badge b-hi">1M + 8M + 15M</span>
+            <span class="badge b-rep">Most Repeated</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="unit-card purple-top">
+        <div class="unit-head">
+          <div><div class="unit-num">Unit 02</div><div class="unit-name">IoT Protocols & Communication</div></div>
+          <div class="unit-weight" style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);color:var(--p1);">82%</div>
+        </div>
+        <div class="unit-body">
+          <div class="pbar-wrap" style="margin-bottom:0.75rem;">
+            <div class="pbar-bg"><div class="pbar-fill fill-purple animated-bar" data-w="82"></div></div>
+          </div>
+          <ul class="unit-topics">
+            <li>MQTT — broker, pub-sub, QoS</li>
+            <li>CoAP — UDP-based, RESTful</li>
+            <li>Zigbee — IEEE 802.15.4, mesh</li>
+            <li>Bluetooth LE (BLE 5.0)</li>
+            <li>6LoWPAN & IPv6</li>
+            <li>AMQP, XMPP overview</li>
+          </ul>
+          <div style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap;">
+            <span class="badge b-crit">Protocol Heavy</span>
+            <span class="badge b-vh">8M Dominant</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="unit-card cyan-top">
+        <div class="unit-head">
+          <div><div class="unit-num">Unit 03</div><div class="unit-name">Sensing & Embedded Systems</div></div>
+          <div class="unit-weight" style="background:rgba(0,255,234,0.08);border:1px solid rgba(0,255,234,0.25);color:var(--c1);">76%</div>
+        </div>
+        <div class="unit-body">
+          <div class="pbar-wrap" style="margin-bottom:0.75rem;">
+            <div class="pbar-bg"><div class="pbar-fill fill-green animated-bar" data-w="76"></div></div>
+          </div>
+          <ul class="unit-topics">
+            <li>Sensor types, selection criteria</li>
+            <li>Actuators — relay, servo, motor</li>
+            <li>Arduino UNO architecture</li>
+            <li>Raspberry Pi GPIO</li>
+            <li>RFID components & working</li>
+            <li>Energy harvesting techniques</li>
+          </ul>
+          <div style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap;">
+            <span class="badge b-hi">Must Study</span>
+            <span class="badge b-rep">1M Frequent</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="unit-card amber-top">
+        <div class="unit-head">
+          <div><div class="unit-num">Unit 04</div><div class="unit-name">Cloud, Edge & Fog Computing</div></div>
+          <div class="unit-weight" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--a1);">65%</div>
+        </div>
+        <div class="unit-body">
+          <div class="pbar-wrap" style="margin-bottom:0.75rem;">
+            <div class="pbar-bg"><div class="pbar-fill fill-amber animated-bar" data-w="65"></div></div>
+          </div>
+          <ul class="unit-topics">
+            <li>Cloud vs Edge vs Fog comparison</li>
+            <li>AWS IoT / Azure IoT Hub</li>
+            <li>Big Data analytics in IoT</li>
+            <li>Machine learning for IoT data</li>
+            <li>Real-time vs batch processing</li>
+            <li>Data storage models</li>
+          </ul>
+          <div style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap;">
+            <span class="badge b-rep">Growing Trend</span>
+            <span class="badge b-hi">8M Context</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="unit-card red-top">
+        <div class="unit-head">
+          <div><div class="unit-num">Unit 05</div><div class="unit-name">IoT Applications & Security</div></div>
+          <div class="unit-weight" style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--r1);">88%</div>
+        </div>
+        <div class="unit-body">
+          <div class="pbar-wrap" style="margin-bottom:0.75rem;">
+            <div class="pbar-bg"><div class="pbar-fill fill-red animated-bar" data-w="88"></div></div>
+          </div>
+          <ul class="unit-topics">
+            <li>Smart City / Smart Home / Smart Agri</li>
+            <li>Healthcare IoT & WBAN</li>
+            <li>Industrial IoT (IIoT), Smart Grid</li>
+            <li>DoS, MITM, Botnet threats</li>
+            <li>TLS/SSL, Authentication</li>
+            <li>IoT security framework design</li>
+          </ul>
+          <div style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap;">
+            <span class="badge b-crit">Highest Weight</span>
+            <span class="badge b-vh">15M Prone</span>
+            <span class="badge b-ok">Case Studies</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- SECTION A -->
+<section id="section-a" style="padding-top:0;">
+  <div class="wrap">
+    <div class="sec-head fade-in">
+      <div class="sec-tag">Section A</div>
+      <h2 class="sec-title">20 Predicted 1-Mark Questions</h2>
+      <p class="sec-desc">Ranked by confidence score derived from repetition frequency and recent appearance trends.</p>
+    </div>
+
+    <!-- FREQUENCY TABLE -->
+    <div class="glass-card blue-top fade-in" style="margin-bottom:1.5rem;">
+      <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--ts);letter-spacing:1px;text-transform:uppercase;margin-bottom:1rem;">1-Mark Topic Probability</div>
+      <div class="pbar-wrap"><div class="pbar-label"><span class="topic">IoT Definition & Architecture Layers</span><span class="pct">95%</span></div><div class="pbar-bg"><div class="pbar-fill fill-blue animated-bar" data-w="95"></div></div></div>
+      <div class="pbar-wrap"><div class="pbar-label"><span class="topic">MQTT — Expansion & Purpose</span><span class="pct">92%</span></div><div class="pbar-bg"><div class="pbar-fill fill-blue animated-bar" data-w="92"></div></div></div>
+      <div class="pbar-wrap"><div class="pbar-label"><span class="topic">Sensor vs Actuator</span><span class="pct">90%</span></div><div class="pbar-bg"><div class="pbar-fill fill-blue animated-bar" data-w="90"></div></div></div>
+      <div class="pbar-wrap"><div class="pbar-label"><span class="topic">RFID & Types</span><span class="pct">88%</span></div><div class="pbar-bg"><div class="pbar-fill fill-purple animated-bar" data-w="88"></div></div></div>
+      <div class="pbar-wrap"><div class="pbar-label"><span class="topic">IoT Security Threats</span><span class="pct">87%</span></div><div class="pbar-bg"><div class="pbar-fill fill-red animated-bar" data-w="87"></div></div></div>
+      <div class="pbar-wrap"><div class="pbar-label"><span class="topic">CoAP vs HTTP</span><span class="pct">86%</span></div><div class="pbar-bg"><div class="pbar-fill fill-purple animated-bar" data-w="86"></div></div></div>
+      <div class="pbar-wrap"><div class="pbar-label"><span class="topic">Edge Computing Definition</span><span class="pct">84%</span></div><div class="pbar-bg"><div class="pbar-fill fill-amber animated-bar" data-w="84"></div></div></div>
+      <div class="pbar-wrap"><div class="pbar-label"><span class="topic">Zigbee — Frequency Band</span><span class="pct">83%</span></div><div class="pbar-bg"><div class="pbar-fill fill-green animated-bar" data-w="83"></div></div></div>
+    </div>
+
+    <div class="must-grid fade-in">
+      <div class="must-card"><div class="must-rank">01</div><div class="must-content"><div class="t">Define Internet of Things (IoT).</div><div class="m"><span class="badge b-crit">95%</span><span class="badge b-hi">Unit 1</span></div></div></div>
+      <div class="must-card"><div class="must-rank">02</div><div class="must-content"><div class="t">What are the layers of IoT architecture?</div><div class="m"><span class="badge b-crit">93%</span><span class="badge b-hi">Unit 1</span></div></div></div>
+      <div class="must-card"><div class="must-rank">03</div><div class="must-content"><div class="t">Expand MQTT. What is it used for?</div><div class="m"><span class="badge b-crit">92%</span><span class="badge b-vh">Unit 2</span></div></div></div>
+      <div class="must-card"><div class="must-rank">04</div><div class="must-content"><div class="t">Difference between sensor and actuator?</div><div class="m"><span class="badge b-crit">90%</span><span class="badge b-hi">Unit 3</span></div></div></div>
+      <div class="must-card"><div class="must-rank">05</div><div class="must-content"><div class="t">What is RFID? Name its types.</div><div class="m"><span class="badge b-vh">88%</span><span class="badge b-hi">Unit 3</span></div></div></div>
+      <div class="must-card"><div class="must-rank">06</div><div class="must-content"><div class="t">List any two IoT security threats.</div><div class="m"><span class="badge b-vh">88%</span><span class="badge b-hi">Unit 5</span></div></div></div>
+      <div class="must-card"><div class="must-rank">07</div><div class="must-content"><div class="t">What is CoAP? How does it differ from HTTP?</div><div class="m"><span class="badge b-vh">86%</span><span class="badge b-vh">Unit 2</span></div></div></div>
+      <div class="must-card"><div class="must-rank">08</div><div class="must-content"><div class="t">Define edge computing in IoT context.</div><div class="m"><span class="badge b-vh">85%</span><span class="badge b-rep">Unit 4</span></div></div></div>
+      <div class="must-card"><div class="must-rank">09</div><div class="must-content"><div class="t">What is Zigbee? State its operating frequency.</div><div class="m"><span class="badge b-rep">84%</span><span class="badge b-hi">Unit 2</span></div></div></div>
+      <div class="must-card"><div class="must-rank">10</div><div class="must-content"><div class="t">What is an embedded system? Give one example.</div><div class="m"><span class="badge b-rep">83%</span><span class="badge b-hi">Unit 3</span></div></div></div>
+      <div class="must-card"><div class="must-rank">11</div><div class="must-content"><div class="t">What is smart agriculture? Give one IoT application.</div><div class="m"><span class="badge b-rep">82%</span><span class="badge b-hi">Unit 5</span></div></div></div>
+      <div class="must-card"><div class="must-rank">12</div><div class="must-content"><div class="t">Differentiate cloud computing and fog computing.</div><div class="m"><span class="badge b-rep">82%</span><span class="badge b-rep">Unit 4</span></div></div></div>
+      <div class="must-card"><div class="must-rank">13</div><div class="must-content"><div class="t">What is M2M communication?</div><div class="m"><span class="badge b-hi">80%</span><span class="badge b-hi">Unit 1</span></div></div></div>
+      <div class="must-card"><div class="must-rank">14</div><div class="must-content"><div class="t">What is 6LoWPAN? Why is it used in IoT?</div><div class="m"><span class="badge b-hi">79%</span><span class="badge b-vh">Unit 2</span></div></div></div>
+      <div class="must-card"><div class="must-rank">15</div><div class="must-content"><div class="t">State the purpose of Arduino in IoT prototyping.</div><div class="m"><span class="badge b-hi">78%</span><span class="badge b-hi">Unit 3</span></div></div></div>
+      <div class="must-card"><div class="must-rank">16</div><div class="must-content"><div class="t">What is a smart grid? How does IoT help?</div><div class="m"><span class="badge b-hi">77%</span><span class="badge b-hi">Unit 5</span></div></div></div>
+      <div class="must-card"><div class="must-rank">17</div><div class="must-content"><div class="t">What is the publish-subscribe model in IoT?</div><div class="m"><span class="badge b-hi">76%</span><span class="badge b-hi">Unit 1</span></div></div></div>
+      <div class="must-card"><div class="must-rank">18</div><div class="must-content"><div class="t">Define Big Data in the context of IoT.</div><div class="m"><span class="badge b-ok">75%</span><span class="badge b-rep">Unit 4</span></div></div></div>
+      <div class="must-card"><div class="must-rank">19</div><div class="must-content"><div class="t">What is healthcare IoT? Give one example.</div><div class="m"><span class="badge b-ok">74%</span><span class="badge b-hi">Unit 5</span></div></div></div>
+      <div class="must-card"><div class="must-rank">20</div><div class="must-content"><div class="t">What is a gateway in IoT? State its function.</div><div class="m"><span class="badge b-ok">73%</span><span class="badge b-hi">Unit 2</span></div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION B -->
+<section id="section-b" style="padding-top:0;">
+  <div class="wrap">
+    <div class="sec-head fade-in">
+      <div class="sec-tag">Section B</div>
+      <h2 class="sec-title">Top Predicted 8-Mark Questions</h2>
+      <p class="sec-desc">Each card includes expected answer structure, key terms, and diagram requirements.</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(event,'t8-1')">IoT Architecture</button>
+      <button class="tab" onclick="switchTab(event,'t8-2')">MQTT vs CoAP</button>
+      <button class="tab" onclick="switchTab(event,'t8-3')">Security</button>
+      <button class="tab" onclick="switchTab(event,'t8-4')">Edge/Fog/Cloud</button>
+      <button class="tab" onclick="switchTab(event,'t8-5')">Smart City</button>
+      <button class="tab" onclick="switchTab(event,'t8-6')">RFID</button>
+      <button class="tab" onclick="switchTab(event,'t8-7')">WSN</button>
+      <button class="tab" onclick="switchTab(event,'t8-8')">Healthcare IoT</button>
+      <button class="tab" onclick="switchTab(event,'t8-9')">Zigbee</button>
+      <button class="tab" onclick="switchTab(event,'t8-10')">Smart Agriculture</button>
+    </div>
+
+    <div id="t8-1" class="tab-panel active fade-in">
+      <div class="glass-card blue-top">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+          <div><span class="badge b-crit" style="margin-bottom:6px;display:inline-block;">94% CONFIDENCE · CRITICAL</span>
+          <div style="font-size:1rem;font-weight:700;line-height:1.4;">Explain the IoT architecture with a neat diagram. Describe each layer in detail.</div></div>
+        </div>
+        <div style="background:var(--bg0);border:1px solid var(--bdr);border-radius:8px;padding:1rem;margin-bottom:12px;">
+          <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--b1);letter-spacing:1px;margin-bottom:8px;">EXPECTED STRUCTURE</div>
+          <div style="font-size:12px;color:var(--ts);line-height:2;">
+            <b style="color:var(--tx);">① Introduction</b> — IoT definition, scope (1 mark)<br>
+            <b style="color:var(--tx);">② Perception Layer</b> — Sensors, RFID, data collection (2 marks)<br>
+            <b style="color:var(--tx);">③ Network Layer</b> — Gateways, routers, communication protocols (2 marks)<br>
+            <b style="color:var(--tx);">④ Application Layer</b> — Smart apps, dashboards, cloud (1.5 marks)<br>
+            <b style="color:var(--tx);">⑤ Neat Labeled Diagram</b> — Full 3-layer or 5-layer stack (1.5 marks)
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="badge b-crit">Diagram Required</span>
+          <span class="badge b-vh">Most Repeated</span>
+          <span class="badge b-hi">1M + 8M + 15M</span>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--ts);"><b style="color:var(--tx);">Key Terms:</b> Perception Layer, Network Layer, Application Layer, Gateway, Middleware, RFID, Sensor, Actuator, Cloud</div>
+      </div>
+    </div>
+
+    <div id="t8-2" class="tab-panel fade-in">
+      <div class="glass-card purple-top">
+        <div style="margin-bottom:14px;"><span class="badge b-crit" style="margin-bottom:6px;display:inline-block;">91% CONFIDENCE · CRITICAL</span>
+          <div style="font-size:1rem;font-weight:700;line-height:1.4;">Explain MQTT protocol with publish-subscribe model. Compare it with CoAP.</div>
+        </div>
+        <div style="background:var(--bg0);border:1px solid var(--bdr2);border-radius:8px;padding:1rem;margin-bottom:12px;">
+          <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--p1);letter-spacing:1px;margin-bottom:8px;">EXPECTED STRUCTURE</div>
+          <div style="font-size:12px;color:var(--ts);line-height:2;">
+            <b style="color:var(--tx);">① MQTT definition</b> — Lightweight, pub-sub, over TCP (1 mark)<br>
+            <b style="color:var(--tx);">② Broker/Publisher/Subscriber diagram</b> — (2 marks)<br>
+            <b style="color:var(--tx);">③ QoS Levels</b> — 0, 1, 2 with explanations (1.5 marks)<br>
+            <b style="color:var(--tx);">④ CoAP overview</b> — RESTful, UDP, constrained devices (1.5 marks)<br>
+            <b style="color:var(--tx);">⑤ Comparison Table</b> — Protocol, Transport, Port, Use case (2 marks)
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="badge b-crit">Diagram Required</span><span class="badge b-vh">Comparison Table</span><span class="badge b-hi">Protocol Focus</span>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--ts);"><b style="color:var(--tx);">Key Terms:</b> Broker, Publisher, Subscriber, QoS, Retained Message, CoAP, UDP, REST, Constrained Devices</div>
+      </div>
+    </div>
+
+    <div id="t8-3" class="tab-panel fade-in">
+      <div class="glass-card red-top">
+        <div style="margin-bottom:14px;"><span class="badge b-crit" style="margin-bottom:6px;display:inline-block;">90% CONFIDENCE · CRITICAL</span>
+          <div style="font-size:1rem;font-weight:700;line-height:1.4;">Discuss IoT security challenges and threats. Explain any two security mechanisms.</div>
+        </div>
+        <div style="background:var(--bg0);border:1px solid rgba(239,68,68,0.15);border-radius:8px;padding:1rem;margin-bottom:12px;">
+          <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--r1);letter-spacing:1px;margin-bottom:8px;">EXPECTED STRUCTURE</div>
+          <div style="font-size:12px;color:var(--ts);line-height:2;">
+            <b style="color:var(--tx);">① IoT security intro</b> — Why IoT is vulnerable (1 mark)<br>
+            <b style="color:var(--tx);">② Threats</b> — DoS, DDoS, MITM, Eavesdropping, Replay, Botnet (2 marks)<br>
+            <b style="color:var(--tx);">③ Attack Surfaces</b> — Physical, Network, Application (1.5 marks)<br>
+            <b style="color:var(--tx);">④ Security Mechanism 1</b> — Authentication (PKI, OAuth) (1.5 marks)<br>
+            <b style="color:var(--tx);">⑤ Security Mechanism 2</b> — TLS/SSL Encryption (2 marks)
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <span class="badge b-crit">Never Skipped</span><span class="badge b-rep">Every Year</span>
+        </div>
+        <div style="margin-top:10px;font-size:12px;color:var(--ts);"><b style="color:var(--tx);">Key Terms:</b> DoS, DDoS, Mirai Botnet, MITM, TLS, Authentication, PKI, Firmware Security, Encryption</div>
+      </div>
+    </div>
+
+    <div id="t8-4" class="tab-panel fade-in">
+      <div class="glass-card amber-top">
+        <div style="margin-bottom:14px;"><span class="badge b-vh" style="margin-bottom:6px;display:inline-block;">87% CONFIDENCE · VERY HIGH</span>
+          <div style="font-size:1rem;font-weight:700;line-height:1.4;">Compare Edge Computing, Fog Computing, and Cloud Computing in IoT with diagram.</div>
+        </div>
+        <div style="background:var(--bg0);border:1px solid rgba(245,158,11,0.15);border-radius:8px;padding:1rem;margin-bottom:12px;">
+          <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--a1);letter-spacing:1px;margin-bottom:8px;">EXPECTED STRUCTURE</div>
+          <div style="font-size:12px;color:var(--ts);line-height:2;">
+            <b style="color:var(--tx);">① Cloud definition</b> — Centralized, high latency issue (1 mark)<br>
+            <b style="color:var(--tx);">② Edge Computing</b> — Process at device level (2 marks)<br>
+            <b style="color:var(--tx);">③ Fog Computing</b> — Intermediate nodes, OpenFog (2 marks)<br>
+            <b style="color:var(--tx);">④ Layered diagram</b> — Cloud→Fog→Edge→Device (1.5 marks)<br>
+            <b style="color:var(--tx);">⑤ Comparison table</b> — Latency, Bandwidth, Location (1.5 marks)
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="badge b-vh">Comparison Table</span><span class="badge b-crit">Diagram Required</span></div>
+        <div style="margin-top:10px;font-size:12px;color:var(--ts);"><b style="color:var(--tx);">Key Terms:</b> Latency, Bandwidth, Real-time, Cloudlet, OpenFog, AWS IoT, Azure IoT Hub, MQTT Gateway</div>
+      </div>
+    </div>
+
+    <div id="t8-5" class="tab-panel fade-in">
+      <div class="glass-card cyan-top">
+        <div style="margin-bottom:14px;"><span class="badge b-vh" style="margin-bottom:6px;display:inline-block;">86% CONFIDENCE · VERY HIGH</span>
+          <div style="font-size:1rem;font-weight:700;line-height:1.4;">Explain smart city concept using IoT. Describe any two smart city applications in detail.</div>
+        </div>
+        <div style="background:var(--bg0);border:1px solid var(--bdr);border-radius:8px;padding:1rem;margin-bottom:12px;">
+          <div style="font-size:12px;color:var(--ts);line-height:2;">
+            <b style="color:var(--tx);">① Smart city definition</b> (1 mark) · <b style="color:var(--tx);">② Key IoT components</b> (1.5 marks)<br>
+            <b style="color:var(--tx);">③ Smart Traffic</b> — Sensors, signal control, GPS (2 marks)<br>
+            <b style="color:var(--tx);">④ Smart Waste Management</b> — Fill-level sensors, route optimization (2 marks)<br>
+            <b style="color:var(--tx);">⑤ Benefits & challenges</b> (1.5 marks)
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--ts);"><b style="color:var(--tx);">Key Terms:</b> Smart Traffic, Parking, Lighting, SCADA, Urban Management, Data Analytics, GPS Tracking</div>
+      </div>
+    </div>
+
+    <div id="t8-6" class="tab-panel fade-in">
+      <div class="glass-card blue-top">
+        <div style="margin-bottom:14px;"><span class="badge b-rep" style="margin-bottom:6px;display:inline-block;">83% CONFIDENCE · REPEATED</span>
+          <div style="font-size:1rem;font-weight:700;line-height:1.4;">Explain RFID technology. Describe its components, working, and applications in IoT.</div>
+        </div>
+        <div style="background:var(--bg0);border:1px solid var(--bdr);border-radius:8px;padding:1rem;margin-bottom:12px;">
+          <div style="font-size:12px;color:var(--ts);line-height:2;">
+            <b style="color:var(--tx);">① RFID definition</b> (1 mark) · <b style="color:var(--tx);">② Components</b> — Tag, Reader, Antenna (1.5 marks)<br>
+            <b style="color:var(--tx);">③ Active vs Passive tags</b> — comparison (1.5 marks)<br>
+            <b style="color:var(--tx);">④ Frequency bands</b> — LF, HF, UHF (1 mark)<br>
+            <b style="color:var(--tx);">⑤ Working principle with diagram</b> (2 marks)<br>
+            <b style="color:var(--tx);">⑥ Applications</b> — supply chain, retail, healthcare (1 mark)
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--ts);"><b style="color:var(--tx);">Key Terms:</b> EPC, Active Tag, Passive Tag, NFC, UHF, HF, LF, Supply Chain, Anti-theft, Inventory Management</div>
+      </div>
+    </div>
+
+    <div id="t8-7" class="tab-panel fade-in">
+      <div class="glass-card purple-top">
+        <div style="margin-bottom:14px;"><span class="badge b-rep" style="margin-bottom:6px;display:inline-block;">82% CONFIDENCE</span>
+          <div style="font-size:1rem;font-weight:700;line-height:1.4;">Describe Wireless Sensor Networks (WSN). Explain its architecture and challenges.</div>
+        </div>
+        <div style="background:var(--bg0);border:1px solid var(--bdr2);border-radius:8px;padding:1rem;margin-bottom:12px;">
+          <div style="font-size:12px;color:var(--ts);line-height:2;">
+            <b style="color:var(--tx);">① WSN definition</b> (1 mark) · <b style="color:var(--tx);">② Node architecture</b> — sensing, processing, radio (2 marks)<br>
+            <b style="color:var(--tx);">③ Cluster topology diagram</b> — Cluster head, base station (2 marks)<br>
+            <b style="color:var(--tx);">④ LEACH routing protocol</b> (1.5 marks) · <b style="color:var(--tx);">⑤ Challenges</b> — energy, security, scalability (1.5 marks)
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--ts);"><b style="color:var(--tx);">Key Terms:</b> Sensor Node, Base Station, Cluster Head, LEACH, ZigBee, Energy Efficiency, TDMA Scheduling</div>
+      </div>
+    </div>
+
+    <div id="t8-8" class="tab-panel fade-in">
+      <div class="glass-card red-top">
+        <div style="margin-bottom:14px;"><span class="badge b-hi" style="margin-bottom:6px;display:inline-block;">80% CONFIDENCE · MUST STUDY</span>
+          <div style="font-size:1rem;font-weight:700;line-height:1.4;">Explain healthcare IoT applications and patient monitoring systems.</div>
+        </div>
+        <div style="background:var(--bg0);border:1px solid rgba(239,68,68,0.15);border-radius:8px;padding:1rem;margin-bottom:12px;">
+          <div style="font-size:12px;color:var(--ts);line-height:2;">
+            <b style="color:var(--tx);">① Healthcare IoT intro</b> (1 mark) · <b style="color:var(--tx);">② Remote patient monitoring</b> (2 marks)<br>
+            <b style="color:var(--tx);">③ Wearable sensors</b> — ECG, SpO2, BP (2 marks) · <b style="color:var(--tx);">④ WBAN architecture</b> (1.5 marks)<br>
+            <b style="color:var(--tx);">⑤ Privacy concerns</b> (1 mark) · <b style="color:var(--tx);">⑥ Examples</b> — Fitbit, Smart Pill (0.5 marks)
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--ts);"><b style="color:var(--tx);">Key Terms:</b> Wearables, WBAN, Telemedicine, ECG, Smart Insulin Pen, HIPAA, Remote Monitoring, Hospital 4.0</div>
+      </div>
+    </div>
+
+    <div id="t8-9" class="tab-panel fade-in">
+      <div class="glass-card purple-top">
+        <div style="margin-bottom:14px;"><span class="badge b-hi" style="margin-bottom:6px;display:inline-block;">79% CONFIDENCE · MUST STUDY</span>
+          <div style="font-size:1rem;font-weight:700;line-height:1.4;">Explain Zigbee protocol. Compare it with Bluetooth and Wi-Fi for IoT applications.</div>
+        </div>
+        <div style="background:var(--bg0);border:1px solid var(--bdr2);border-radius:8px;padding:1rem;margin-bottom:12px;">
+          <div style="font-size:12px;color:var(--ts);line-height:2;">
+            <b style="color:var(--tx);">① Zigbee & IEEE 802.15.4</b> (1 mark) · <b style="color:var(--tx);">② Stack architecture</b> (1.5 marks)<br>
+            <b style="color:var(--tx);">③ Mesh networking</b> — coordinator, router, end device (2 marks)<br>
+            <b style="color:var(--tx);">④ Comparison table</b> — Zigbee vs BLE vs Wi-Fi (3 marks) · <b style="color:var(--tx);">⑤ Use cases</b> (0.5 marks)
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--ts);"><b style="color:var(--tx);">Key Terms:</b> IEEE 802.15.4, 2.4GHz, Low Power, Mesh, Coordinator, Router, End Device, ZigBee Alliance</div>
+      </div>
+    </div>
+
+    <div id="t8-10" class="tab-panel fade-in">
+      <div class="glass-card amber-top">
+        <div style="margin-bottom:14px;"><span class="badge b-hi" style="margin-bottom:6px;display:inline-block;">78% CONFIDENCE</span>
+          <div style="font-size:1rem;font-weight:700;line-height:1.4;">Describe smart agriculture using IoT. Explain how sensors and data analytics improve yield.</div>
+        </div>
+        <div style="background:var(--bg0);border:1px solid rgba(245,158,11,0.15);border-radius:8px;padding:1rem;margin-bottom:12px;">
+          <div style="font-size:12px;color:var(--ts);line-height:2;">
+            <b style="color:var(--tx);">① Precision agriculture concept</b> (1 mark) · <b style="color:var(--tx);">② Soil & weather sensors</b> (2 marks)<br>
+            <b style="color:var(--tx);">③ Drone monitoring + GPS</b> (1.5 marks) · <b style="color:var(--tx);">④ Automated irrigation system</b> (2 marks)<br>
+            <b style="color:var(--tx);">⑤ Data analytics pipeline</b> (1 mark) · <b style="color:var(--tx);">⑥ Case study / example</b> (0.5 marks)
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--ts);"><b style="color:var(--tx);">Key Terms:</b> Precision Agriculture, NPK Sensor, Soil Moisture, Drip Irrigation, Remote Sensing, Yield Optimization</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION C -->
+<section id="section-c" style="padding-top:0;">
+  <div class="wrap">
+    <div class="sec-head fade-in">
+      <div class="sec-tag">Section C</div>
+      <h2 class="sec-title">Most Probable 15-Mark Questions</h2>
+      <p class="sec-desc">High-confidence predictions with complete answer outlines for the 15-mark essay question.</p>
+    </div>
+
+    <div class="predict-hero fade-in" style="margin-bottom:1.2rem;">
+      <div class="content">
+        <div class="predict-rank">Prediction #1 · 91% Probability · Most Likely</div>
+        <div class="predict-q">"Explain IoT Architecture in detail with neat diagram. Discuss communication models, protocols used at each layer, and challenges in implementing a real-world IoT system."</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+          <span class="badge b-crit">Critical</span>
+          <span class="badge b-rep">Highest Repeat Rate</span>
+          <span class="badge b-hi">Diagram Required</span>
+          <span class="badge b-vh">Protocol Table</span>
+        </div>
+        <div class="outline-grid">
+          <div class="outline-item"><div class="step">STEP 01</div><div style="font-size:12px;font-weight:600;">IoT Introduction <span class="marks">2M</span></div><div style="font-size:11px;color:var(--ts);margin-top:3px;">Definition, evolution, scope, key characteristics</div></div>
+          <div class="outline-item"><div class="step">STEP 02</div><div style="font-size:12px;font-weight:600;">3-Layer Architecture <span class="marks">3M</span></div><div style="font-size:11px;color:var(--ts);margin-top:3px;">Perception, Network, Application — functions of each</div></div>
+          <div class="outline-item"><div class="step">STEP 03</div><div style="font-size:12px;font-weight:600;">5-Layer Architecture <span class="marks">2M</span></div><div style="font-size:11px;color:var(--ts);margin-top:3px;">Business, Application, Processing, Transport, Perception</div></div>
+          <div class="outline-item"><div class="step">STEP 04</div><div style="font-size:12px;font-weight:600;">Neat Diagram <span class="marks">2M</span></div><div style="font-size:11px;color:var(--ts);margin-top:3px;">Full labeled architecture — mandatory for marks</div></div>
+          <div class="outline-item"><div class="step">STEP 05</div><div style="font-size:12px;font-weight:600;">Communication Models <span class="marks">2M</span></div><div style="font-size:11px;color:var(--ts);margin-top:3px;">D2D, Device-to-Cloud, Device-to-Gateway</div></div>
+          <div class="outline-item"><div class="step">STEP 06</div><div style="font-size:12px;font-weight:600;">Protocols Per Layer <span class="marks">2M</span></div><div style="font-size:11px;color:var(--ts);margin-top:3px;">MQTT, CoAP, HTTP, Zigbee, BLE, 6LoWPAN table</div></div>
+          <div class="outline-item"><div class="step">STEP 07</div><div style="font-size:12px;font-weight:600;">Challenges <span class="marks">2M</span></div><div style="font-size:11px;color:var(--ts);margin-top:3px;">Scalability, security, interoperability, power, standardization</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="g2 fade-in">
+      <div class="glass-card purple-top">
+        <div class="predict-rank" style="color:var(--p1);font-size:10px;margin-bottom:8px;">Prediction #2 · 87% Probability</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px;border-left:2px solid var(--p1);padding-left:10px;">"Discuss IoT security in detail — threats, attack vectors, and propose a security framework for smart city deployment."</div>
+        <div style="font-size:12px;color:var(--ts);line-height:2;">
+          ① IoT security overview (2M) · ② Threats: DoS, MITM, Botnet (3M)<br>
+          ③ Attack surfaces (2M) · ④ Security mechanisms: Auth, TLS (3M)<br>
+          ⑤ Smart City security framework diagram (3M) · ⑥ Challenges (2M)
+        </div>
+        <div style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap;">
+          <span class="badge b-vh">Very High</span><span class="badge b-crit">Security Framework Diagram</span>
+        </div>
+      </div>
+      <div class="glass-card blue-top">
+        <div class="predict-rank" style="color:var(--b1);font-size:10px;margin-bottom:8px;">Prediction #3 · 83% Probability</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:12px;border-left:2px solid var(--b1);padding-left:10px;">"Explain IoT protocols in detail: MQTT, CoAP, and Zigbee. Compare features and suitable use cases with a real-world scenario."</div>
+        <div style="font-size:12px;color:var(--ts);line-height:2;">
+          ① Why protocols matter (1M) · ② MQTT broker, QoS (3M)<br>
+          ③ CoAP RESTful model (3M) · ④ Zigbee mesh topology (3M)<br>
+          ⑤ Comparison table all three (3M) · ⑥ Smart Home use case (2M)
+        </div>
+        <div style="margin-top:10px;display:flex;gap:5px;flex-wrap:wrap;">
+          <span class="badge b-hi">High</span><span class="badge b-vh">Comparison Table</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROTOCOLS -->
+<section id="protocols" style="padding-top:0;">
+  <div class="wrap">
+    <div class="sec-head fade-in">
+      <div class="sec-tag">Protocol Reference</div>
+      <h2 class="sec-title">Most Important IoT Protocols</h2>
+    </div>
+    <div class="g3 fade-in">
+      <div class="proto-card">
+        <div class="proto-name" style="color:var(--b1);">MQTT</div>
+        <div class="proto-exp">Message Queuing Telemetry Transport</div>
+        <div class="proto-bar" style="background:linear-gradient(90deg,var(--b1),var(--c1));width:95%;"></div>
+        <div class="proto-facts">
+          <span><strong>Transport:</strong> TCP/IP</span>
+          <span><strong>Model:</strong> Publish-Subscribe</span>
+          <span><strong>Pattern:</strong> Broker-based</span>
+          <span><strong>QoS:</strong> 0, 1, 2</span>
+          <span><strong>Use:</strong> Smart sensors, telemetry</span>
+          <span><strong>Exam Pattern:</strong> 8M comparison + diagram</span>
+        </div>
+        <div style="margin-top:8px;"><span class="badge b-crit">Critical</span></div>
+      </div>
+
+      <div class="proto-card">
+        <div class="proto-name" style="color:var(--p1);">CoAP</div>
+        <div class="proto-exp">Constrained Application Protocol</div>
+        <div class="proto-bar" style="background:linear-gradient(90deg,var(--p1),var(--p2));width:85%;"></div>
+        <div class="proto-facts">
+          <span><strong>Transport:</strong> UDP</span>
+          <span><strong>Model:</strong> RESTful Request-Response</span>
+          <span><strong>Methods:</strong> GET, PUT, POST, DELETE</span>
+          <span><strong>Port:</strong> 5683</span>
+          <span><strong>Use:</strong> Constrained devices, M2M</span>
+          <span><strong>Exam Pattern:</strong> MQTT vs CoAP comparison</span>
+        </div>
+        <div style="margin-top:8px;"><span class="badge b-crit">Critical</span></div>
+      </div>
+
+      <div class="proto-card">
+        <div class="proto-name" style="color:var(--c1);">Zigbee</div>
+        <div class="proto-exp">IEEE 802.15.4 based protocol</div>
+        <div class="proto-bar" style="background:linear-gradient(90deg,var(--c1),var(--c2));width:80%;"></div>
+        <div class="proto-facts">
+          <span><strong>Standard:</strong> IEEE 802.15.4</span>
+          <span><strong>Frequency:</strong> 2.4GHz / 868/915 MHz</span>
+          <span><strong>Topology:</strong> Star, Tree, Mesh</span>
+          <span><strong>Range:</strong> 10–100m</span>
+          <span><strong>Use:</strong> Smart home, automation</span>
+          <span><strong>Exam Pattern:</strong> Comparison with BLE, Wi-Fi</span>
+        </div>
+        <div style="margin-top:8px;"><span class="badge b-vh">Very High</span></div>
+      </div>
+
+      <div class="proto-card">
+        <div class="proto-name" style="color:var(--a1);">RFID</div>
+        <div class="proto-exp">Radio Frequency Identification</div>
+        <div class="proto-bar" style="background:linear-gradient(90deg,var(--a1),#f97316);width:78%;"></div>
+        <div class="proto-facts">
+          <span><strong>Types:</strong> Active / Passive / Semi-passive</span>
+          <span><strong>Bands:</strong> LF (125kHz), HF (13.56MHz), UHF</span>
+          <span><strong>Components:</strong> Tag, Reader, Antenna</span>
+          <span><strong>Related:</strong> NFC</span>
+          <span><strong>Use:</strong> Supply chain, access control</span>
+          <span><strong>Exam Pattern:</strong> Working diagram + types</span>
+        </div>
+        <div style="margin-top:8px;"><span class="badge b-rep">Repeated</span></div>
+      </div>
+
+      <div class="proto-card">
+        <div class="proto-name" style="color:var(--c2);">6LoWPAN</div>
+        <div class="proto-exp">IPv6 over Low-Power WPANs</div>
+        <div class="proto-bar" style="background:linear-gradient(90deg,var(--c2),var(--c1));width:70%;"></div>
+        <div class="proto-facts">
+          <span><strong>Base:</strong> IEEE 802.15.4</span>
+          <span><strong>Purpose:</strong> IPv6 on constrained devices</span>
+          <span><strong>Feature:</strong> Header compression</span>
+          <span><strong>MTU:</strong> 127 bytes adapted</span>
+          <span><strong>Use:</strong> Smart metering, WSN</span>
+          <span><strong>Exam Pattern:</strong> Definition + purpose 1M</span>
+        </div>
+        <div style="margin-top:8px;"><span class="badge b-hi">Important</span></div>
+      </div>
+
+      <div class="proto-card">
+        <div class="proto-name" style="color:var(--r1);">BLE</div>
+        <div class="proto-exp">Bluetooth Low Energy</div>
+        <div class="proto-bar" style="background:linear-gradient(90deg,var(--r1),var(--p1));width:72%;"></div>
+        <div class="proto-facts">
+          <span><strong>Version:</strong> BLE 5.0+</span>
+          <span><strong>Frequency:</strong> 2.4GHz ISM band</span>
+          <span><strong>Power:</strong> Ultra-low energy</span>
+          <span><strong>Range:</strong> Up to 400m (BLE 5)</span>
+          <span><strong>Use:</strong> Wearables, health monitors</span>
+          <span><strong>Exam Pattern:</strong> Zigbee vs BLE comparison</span>
+        </div>
+        <div style="margin-top:8px;"><span class="badge b-rep">Repeated</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIAGRAMS -->
+<section id="diagrams" style="padding-top:0;">
+  <div class="wrap">
+    <div class="sec-head fade-in">
+      <div class="sec-tag">Visual Reference</div>
+      <h2 class="sec-title">Most Important Diagrams to Draw</h2>
+    </div>
+    <div class="glass-card blue-top fade-in" style="padding:0.5rem 0;">
+      <table class="diag-table">
+        <thead><tr><th>#</th><th>Diagram</th><th>Importance</th><th>Appears In</th><th>Context</th></tr></thead>
+        <tbody>
+          <tr><td style="color:var(--tm);">01</td><td><strong>IoT 3-Layer / 5-Layer Architecture Stack</strong></td>
+            <td><div class="imp-dot"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div></td>
+            <td><span class="badge b-crit">8M + 15M</span></td><td style="font-size:12px;color:var(--ts);">Core architecture question</td></tr>
+          <tr><td style="color:var(--tm);">02</td><td><strong>MQTT Publish-Subscribe Architecture</strong></td>
+            <td><div class="imp-dot"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span></div></td>
+            <td><span class="badge b-crit">8M</span></td><td style="font-size:12px;color:var(--ts);">Most repeated protocol diagram</td></tr>
+          <tr><td style="color:var(--tm);">03</td><td><strong>Edge vs Fog vs Cloud Computing Layers</strong></td>
+            <td><div class="imp-dot"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="off"></span></div></td>
+            <td><span class="badge b-vh">8M</span></td><td style="font-size:12px;color:var(--ts);">Comparison diagram — draw hierarchy</td></tr>
+          <tr><td style="color:var(--tm);">04</td><td><strong>RFID System — Tag + Reader + Antenna</strong></td>
+            <td><div class="imp-dot"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="off"></span></div></td>
+            <td><span class="badge b-vh">8M</span></td><td style="font-size:12px;color:var(--ts);">Component diagram with flow</td></tr>
+          <tr><td style="color:var(--tm);">05</td><td><strong>WSN Node Architecture & Cluster Topology</strong></td>
+            <td><div class="imp-dot"><span class="on"></span><span class="on"></span><span class="on"></span><span class="off"></span><span class="off"></span></div></td>
+            <td><span class="badge b-hi">8M</span></td><td style="font-size:12px;color:var(--ts);">Cluster-head, base station labeled</td></tr>
+          <tr><td style="color:var(--tm);">06</td><td><strong>Smart Home IoT System Architecture</strong></td>
+            <td><div class="imp-dot"><span class="on"></span><span class="on"></span><span class="on"></span><span class="off"></span><span class="off"></span></div></td>
+            <td><span class="badge b-hi">8M + 15M</span></td><td style="font-size:12px;color:var(--ts);">Application architecture diagram</td></tr>
+          <tr><td style="color:var(--tm);">07</td><td><strong>Zigbee Star / Mesh Network Topology</strong></td>
+            <td><div class="imp-dot"><span class="on"></span><span class="on"></span><span class="on"></span><span class="off"></span><span class="off"></span></div></td>
+            <td><span class="badge b-rep">8M</span></td><td style="font-size:12px;color:var(--ts);">Coordinator → Router → End Device</td></tr>
+          <tr><td style="color:var(--tm);">08</td><td><strong>IoT Security Framework — Layered Defense</strong></td>
+            <td><div class="imp-dot"><span class="on"></span><span class="on"></span><span class="on"></span><span class="on"></span><span class="off"></span></div></td>
+            <td><span class="badge b-vh">8M + 15M</span></td><td style="font-size:12px;color:var(--ts);">High value in 15M security question</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- REVISION ZONE -->
+<section id="revision" style="padding-top:0;">
+  <div class="wrap">
+    <div class="sec-head fade-in">
+      <div class="sec-tag">Last-Minute Zone</div>
+      <h2 class="sec-title">Emergency Revision Guide</h2>
+      <p class="sec-desc">Optimized for the final 3 hours before your exam.</p>
+    </div>
+    <div class="g4 fade-in">
+
+      <div class="glass-card green">
+        <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--c2);letter-spacing:1px;margin-bottom:10px;">MINIMUM TO PASS</div>
+        <div class="rev-col">
+          <div class="rev-item"><div class="rev-icon">📐</div><div><div class="t">IoT 3-Layer Architecture</div><div class="d">Draw diagram + name all 3 layers</div></div></div>
+          <div class="rev-item"><div class="rev-icon">📡</div><div><div class="t">MQTT Basics</div><div class="d">Pub-Sub model, broker role, QoS</div></div></div>
+          <div class="rev-item"><div class="rev-icon">🔒</div><div><div class="t">5 IoT Security Threats</div><div class="d">DoS, DDoS, MITM, Botnet, Replay</div></div></div>
+          <div class="rev-item"><div class="rev-icon">📖</div><div><div class="t">10 Core Definitions</div><div class="d">IoT, RFID, CoAP, Edge, Fog, WSN...</div></div></div>
+          <div class="rev-item"><div class="rev-icon">🏙️</div><div><div class="t">1 Application In Detail</div><div class="d">Smart City or Smart Agriculture</div></div></div>
+        </div>
+      </div>
+
+      <div class="glass-card blue-top">
+        <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--b1);letter-spacing:1px;margin-bottom:10px;">FOR 1-MARK (20 min)</div>
+        <div class="rev-col">
+          <div class="rev-item"><div class="rev-icon">✍️</div><div><div class="t">Memorize 10 definitions</div><div class="d">IoT, MQTT, CoAP, Edge, Fog, WSN, RFID, Zigbee, 6LoWPAN, Actuator</div></div></div>
+          <div class="rev-item"><div class="rev-icon">📋</div><div><div class="t">Protocol expansions</div><div class="d">MQTT, CoAP, RFID, BLE, WSN, M2M</div></div></div>
+          <div class="rev-item"><div class="rev-icon">🔢</div><div><div class="t">Layer names</div><div class="d">Both 3-layer and 5-layer versions</div></div></div>
+        </div>
+      </div>
+
+      <div class="glass-card purple-top">
+        <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--p1);letter-spacing:1px;margin-bottom:10px;">FOR 8-MARK (90 min)</div>
+        <div class="rev-col">
+          <div class="rev-item"><div class="rev-icon">📡</div><div><div class="t">MQTT diagram + QoS</div><div class="d">Broker-Publisher-Subscriber flow</div></div></div>
+          <div class="rev-item"><div class="rev-icon">🔒</div><div><div class="t">IoT Security with threats</div><div class="d">5 threats + 2 countermeasures</div></div></div>
+          <div class="rev-item"><div class="rev-icon">☁️</div><div><div class="t">Edge vs Fog vs Cloud table</div><div class="d">Latency, bandwidth, location</div></div></div>
+          <div class="rev-item"><div class="rev-icon">🏙️</div><div><div class="t">Smart City scenario</div><div class="d">Traffic + waste management</div></div></div>
+        </div>
+      </div>
+
+      <div class="glass-card red-top">
+        <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--r1);letter-spacing:1px;margin-bottom:10px;">FOR 15-MARK (60 min)</div>
+        <div class="rev-col">
+          <div class="rev-item"><div class="rev-icon">🏗️</div><div><div class="t">Master 5-layer architecture</div><div class="d">All layer names + functions</div></div></div>
+          <div class="rev-item"><div class="rev-icon">🖊️</div><div><div class="t">Labeled architecture diagram</div><div class="d">Non-negotiable for full marks</div></div></div>
+          <div class="rev-item"><div class="rev-icon">🔗</div><div><div class="t">Protocol table ready</div><div class="d">MQTT / CoAP / Zigbee side-by-side</div></div></div>
+          <div class="rev-item"><div class="rev-icon">📝</div><div><div class="t">7+ structured points</div><div class="d">Use headings, bold key terms</div></div></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 80% SCORING TOPICS -->
+    <div class="glass-card cyan-top fade-in" style="margin-top:1.2rem;">
+      <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--c2);letter-spacing:1px;margin-bottom:1rem;">TOPICS TO SCORE 80%+</div>
+      <div class="g2">
+        <div>
+          <div class="pbar-wrap"><div class="pbar-label"><span class="topic">IoT 5-Layer Architecture (full)</span><span class="pct" style="color:var(--c2);">Must</span></div><div class="pbar-bg"><div class="pbar-fill fill-green animated-bar" data-w="100"></div></div></div>
+          <div class="pbar-wrap"><div class="pbar-label"><span class="topic">MQTT + CoAP comparison table</span><span class="pct" style="color:var(--c2);">Must</span></div><div class="pbar-bg"><div class="pbar-fill fill-green animated-bar" data-w="95"></div></div></div>
+          <div class="pbar-wrap"><div class="pbar-label"><span class="topic">Edge vs Fog vs Cloud comparison</span><span class="pct" style="color:var(--b1);">High</span></div><div class="pbar-bg"><div class="pbar-fill fill-blue animated-bar" data-w="88"></div></div></div>
+          <div class="pbar-wrap"><div class="pbar-label"><span class="topic">IoT Security Framework (15M)</span><span class="pct" style="color:var(--b1);">High</span></div><div class="pbar-bg"><div class="pbar-fill fill-blue animated-bar" data-w="85"></div></div></div>
+          <div class="pbar-wrap"><div class="pbar-label"><span class="topic">Zigbee vs BLE vs Wi-Fi comparison</span><span class="pct" style="color:var(--p1);">Med</span></div><div class="pbar-bg"><div class="pbar-fill fill-purple animated-bar" data-w="78"></div></div></div>
+        </div>
+        <div>
+          <div class="pbar-wrap"><div class="pbar-label"><span class="topic">RFID working + applications</span><span class="pct" style="color:var(--b1);">High</span></div><div class="pbar-bg"><div class="pbar-fill fill-blue animated-bar" data-w="80"></div></div></div>
+          <div class="pbar-wrap"><div class="pbar-label"><span class="topic">WSN architecture + challenges</span><span class="pct" style="color:var(--p1);">Med</span></div><div class="pbar-bg"><div class="pbar-fill fill-purple animated-bar" data-w="75"></div></div></div>
+          <div class="pbar-wrap"><div class="pbar-label"><span class="topic">Healthcare IoT system design</span><span class="pct" style="color:var(--p1);">Med</span></div><div class="pbar-bg"><div class="pbar-fill fill-purple animated-bar" data-w="73"></div></div></div>
+          <div class="pbar-wrap"><div class="pbar-label"><span class="topic">Smart City infrastructure</span><span class="pct" style="color:var(--b1);">High</span></div><div class="pbar-bg"><div class="pbar-fill fill-blue animated-bar" data-w="82"></div></div></div>
+          <div class="pbar-wrap"><div class="pbar-label"><span class="topic">IoT challenges (all 6 types)</span><span class="pct" style="color:var(--p1);">Med</span></div><div class="pbar-bg"><div class="pbar-fill fill-purple animated-bar" data-w="70"></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- EXAMINER TREND -->
+<section id="trends" style="padding-top:0;">
+  <div class="wrap">
+    <div class="sec-head fade-in">
+      <div class="sec-tag">Examiner Intelligence</div>
+      <h2 class="sec-title">Examiner Behavior Analysis</h2>
+    </div>
+    <div class="g2 fade-in">
+      <div class="glass-card amber-top">
+        <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--a1);letter-spacing:1px;margin-bottom:12px;">EXAMINER FAVORITE PATTERNS</div>
+        <div class="trend-item"><div class="trend-num">01</div><div class="trend-content"><div class="t">Architecture + Protocol combination in 15M</div><div class="d">Almost every year — never separated</div></div></div>
+        <div class="trend-item"><div class="trend-num">02</div><div class="trend-content"><div class="t">Comparison tables are highly preferred</div><div class="d">MQTT vs CoAP, Zigbee vs BLE, Edge vs Fog always tested</div></div></div>
+        <div class="trend-item"><div class="trend-num">03</div><div class="trend-content"><div class="t">Applications always require real examples</div><div class="d">Generic answers penalized; name specific devices/systems</div></div></div>
+        <div class="trend-item"><div class="trend-num">04</div><div class="trend-content"><div class="t">Security topic never skipped in Section B</div><div class="d">100% appearance rate across analyzed papers</div></div></div>
+        <div class="trend-item"><div class="trend-num">05</div><div class="trend-content"><div class="t">Diagram required in 80% of 8M answers</div><div class="d">Marks explicitly allocated for labeled diagrams</div></div></div>
+      </div>
+      <div class="glass-card red-top">
+        <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--r1);letter-spacing:1px;margin-bottom:12px;">TOPICS DUE FOR RETURN</div>
+        <div class="trend-item"><div class="trend-num">📈</div><div class="trend-content"><div class="t">Industrial IoT (IIoT)</div><div class="d">Long absence — high probability of return this cycle</div></div></div>
+        <div class="trend-item"><div class="trend-num">📈</div><div class="trend-content"><div class="t">Machine Learning + IoT integration</div><div class="d">Emerging trend — increasingly featured in recent papers</div></div></div>
+        <div class="trend-item"><div class="trend-num">📈</div><div class="trend-content"><div class="t">Smart Grid detailed question</div><div class="d">Appeared lightly — due for a full 8M treatment</div></div></div>
+        <div class="trend-item"><div class="trend-num">📈</div><div class="trend-content"><div class="t">Data Analytics pipeline in IoT</div><div class="d">Growing syllabus area — medium probability 8M</div></div></div>
+        <div class="trend-item"><div class="trend-num">📈</div><div class="trend-content"><div class="t">Energy harvesting techniques</div><div class="d">Niche but recurring — good backup topic</div></div></div>
+      </div>
+      <div class="glass-card blue-top">
+        <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--b1);letter-spacing:1px;margin-bottom:12px;">COMMONLY PAIRED CONCEPTS</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <span style="background:rgba(0,212,255,0.06);border:1px solid var(--bdr);border-radius:20px;padding:5px 12px;font-size:12px;">MQTT ↔ CoAP</span>
+          <span style="background:rgba(168,85,247,0.06);border:1px solid var(--bdr2);border-radius:20px;padding:5px 12px;font-size:12px;">Edge ↔ Fog ↔ Cloud</span>
+          <span style="background:rgba(0,212,255,0.06);border:1px solid var(--bdr);border-radius:20px;padding:5px 12px;font-size:12px;">Zigbee ↔ BLE ↔ WiFi</span>
+          <span style="background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:20px;padding:5px 12px;font-size:12px;">Architecture ↔ Security</span>
+          <span style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:20px;padding:5px 12px;font-size:12px;">Smart Home ↔ Smart City</span>
+          <span style="background:rgba(0,212,255,0.06);border:1px solid var(--bdr);border-radius:20px;padding:5px 12px;font-size:12px;">Sensor ↔ Actuator ↔ Gateway</span>
+          <span style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:20px;padding:5px 12px;font-size:12px;">IoT ↔ Security Threats</span>
+          <span style="background:rgba(168,85,247,0.06);border:1px solid var(--bdr2);border-radius:20px;padding:5px 12px;font-size:12px;">Arduino ↔ Raspberry Pi</span>
+        </div>
+      </div>
+      <div class="glass-card purple-top">
+        <div style="font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--p1);letter-spacing:1px;margin-bottom:12px;">UNIT SCORING RANKING</div>
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="font-size:13px;">Unit 1 — IoT Fundamentals</span>
+            <div style="display:flex;gap:3px;"><span style="color:var(--p1);">★★★★★</span></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="font-size:13px;">Unit 5 — Applications & Security</span>
+            <div style="display:flex;gap:3px;"><span style="color:var(--b1);">★★★★★</span></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="font-size:13px;">Unit 2 — Protocols</span>
+            <div style="display:flex;gap:3px;"><span style="color:var(--c1);">★★★★</span><span style="color:rgba(255,255,255,0.15);">★</span></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+            <span style="font-size:13px;">Unit 3 — Embedded / Hardware</span>
+            <div style="display:flex;gap:3px;"><span style="color:var(--a1);">★★★</span><span style="color:rgba(255,255,255,0.15);">★★</span></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;">
+            <span style="font-size:13px;">Unit 4 — Cloud / Edge / Fog</span>
+            <div style="display:flex;gap:3px;"><span style="color:var(--c2);">★★★</span><span style="color:rgba(255,255,255,0.15);">★★</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEFINITIONS -->
+    <div class="sec-head fade-in" style="margin-top:3rem;">
+      <div class="sec-tag">Quick Reference</div>
+      <h2 class="sec-title">Most Repeated Definitions</h2>
+    </div>
+    <div class="glass-card fade-in" style="padding:0.5rem 0;">
+      <table class="diag-table">
+        <thead><tr><th>Term</th><th>One-Line Definition</th><th>Priority</th></tr></thead>
+        <tbody>
+          <tr><td><strong>IoT</strong></td><td style="color:var(--ts);font-size:12px;">Network of physical devices embedded with sensors, software, and connectivity to exchange data over the internet</td><td><span class="badge b-crit">Critical</span></td></tr>
+          <tr><td><strong>MQTT</strong></td><td style="color:var(--ts);font-size:12px;">Lightweight publish-subscribe messaging protocol for constrained IoT devices operating over TCP/IP</td><td><span class="badge b-crit">Critical</span></td></tr>
+          <tr><td><strong>CoAP</strong></td><td style="color:var(--ts);font-size:12px;">RESTful application layer protocol for M2M communication on constrained IoT networks over UDP</td><td><span class="badge b-crit">Critical</span></td></tr>
+          <tr><td><strong>Edge Computing</strong></td><td style="color:var(--ts);font-size:12px;">Processing data near the data source (device edge) to minimize latency and reduce bandwidth usage</td><td><span class="badge b-vh">Very High</span></td></tr>
+          <tr><td><strong>Fog Computing</strong></td><td style="color:var(--ts);font-size:12px;">Extension of cloud computing to network edge using intermediate fog nodes between cloud and devices</td><td><span class="badge b-vh">Very High</span></td></tr>
+          <tr><td><strong>WSN</strong></td><td style="color:var(--ts);font-size:12px;">Spatially distributed autonomous sensor network used to monitor physical or environmental conditions</td><td><span class="badge b-hi">Important</span></td></tr>
+          <tr><td><strong>RFID</strong></td><td style="color:var(--ts);font-size:12px;">Technology using electromagnetic fields to automatically identify and track tags attached to objects</td><td><span class="badge b-rep">Repeated</span></td></tr>
+          <tr><td><strong>6LoWPAN</strong></td><td style="color:var(--ts);font-size:12px;">Standard enabling IPv6 packet transmission over IEEE 802.15.4 low-power wireless personal area networks</td><td><span class="badge b-rep">Repeated</span></td></tr>
+          <tr><td><strong>Actuator</strong></td><td style="color:var(--ts);font-size:12px;">Device that converts electrical control signal into a physical action (motor, relay, valve, servo)</td><td><span class="badge b-hi">Important</span></td></tr>
+          <tr><td><strong>Zigbee</strong></td><td style="color:var(--ts);font-size:12px;">Low-power, low-data-rate wireless mesh communication protocol based on IEEE 802.15.4 standard</td><td><span class="badge b-rep">Repeated</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="logo">IoT · EXAM PREDICTION ENGINE v2.0</div>
+  <p>Deep pattern analysis · Section A:20×1M · Section B:5×8M · Section C:1×15M</p>
+  <p style="margin-top:4px;">Predictions based on topic frequency, examiner preference patterns & curriculum weightage trends</p>
+</footer>
+
+<script>
+function initProgressBars() {
+  document.querySelectorAll('.animated-bar').forEach(bar => {
+    const width = Number(bar.dataset.w);
+    bar.style.width = `${Number.isFinite(width) ? Math.max(0, Math.min(width, 100)) : 0}%`;
+  });
+}
+
+function initRevealAnimation() {
+  const fadeItems = document.querySelectorAll('.fade-in');
+
+  if (!('IntersectionObserver' in window)) {
+    fadeItems.forEach(el => el.classList.add('visible'));
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  fadeItems.forEach(el => observer.observe(el));
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  setTimeout(initProgressBars, 300);
+  initRevealAnimation();
+});
+
+// TABS
+function switchTab(event, id) {
+  const section = event.target.closest('section');
+  const panel = document.getElementById(id);
+  if (!section || !panel) return;
+  section.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  section.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  panel.classList.add('active');
+  panel.classList.add('visible');
+}
+</script>
+</body>
+</html>
